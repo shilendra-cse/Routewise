@@ -1,0 +1,40 @@
+{
+  "name": "routewise",
+  "version": "0.0.1",
+  "description": "Your folders are your API.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch examples/basic-api/main.ts",
+    "example:node": "tsx examples/basic-api/main.ts",
+    "example:bun": "bun examples/basic-api/main.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shilendra-cse/Routewise.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shilendra-cse/Routewise/issues"
+  },
+  "homepage": "https://github.com/shilendra-cse/Routewise#readme",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^25.9.2",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  }
+}
