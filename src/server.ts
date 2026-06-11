@@ -1,6 +1,5 @@
 import * as http from "node:http";
 import { createContext } from "./context.js";
-const PORT = 3000;
 
 export function createRoutewiseServer() {
   const server = http.createServer((req, res) => {
