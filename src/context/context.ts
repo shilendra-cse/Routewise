@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { parseRequest } from "./request.js";
+import { parseRequest } from "../request/request.js";
 
 export function createContext(req: IncomingMessage, res: ServerResponse) {
   const { method, path, query } = parseRequest(req);

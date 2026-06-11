@@ -1,4 +1,4 @@
-import { createRoutewiseServer } from "./server.js";
+import { createRoutewiseServer } from "./server/server.js";
 
 // Public - Front Door
 export function routewise() {

@@ -1,11 +1,5 @@
 import { IncomingMessage } from "node:http";
-
-export type ParsedRequest = {
-  method: string;
-  path: string;
-  query: Record<string, string>;
-  host: string;
-};
+import { ParsedRequest } from "./type.js";
 
 export function parseRequest(req: IncomingMessage): ParsedRequest {
   const host = req.headers.host ?? "localhost";
