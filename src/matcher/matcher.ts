@@ -42,5 +42,6 @@ export function createRouter() {
     delete: (pattern: string, handler: Handler) =>
       register("DELETE", pattern, handler),
     match,
+    register,
   };
 }

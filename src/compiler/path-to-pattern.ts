@@ -3,7 +3,7 @@ export function pathToPattern(segments: string[]): string {
 
   const parts = segments.map((segment) => {
     if (segment.startsWith("[") && segment.endsWith("]")) {
-      return `${segment.slice(1, -1)}`;
+      return `:${segment.slice(1, -1)}`;
     }
     return segment;
   });

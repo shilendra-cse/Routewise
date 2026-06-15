@@ -1,0 +1,16 @@
+{
+  "name": "basic-api",
+  "version": "1.0.0",
+  "description": "Routewise example API",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch main.ts",
+    "start": "tsx main.ts"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^25.9.3",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  }
+}

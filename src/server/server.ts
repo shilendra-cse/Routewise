@@ -1,16 +1,8 @@
 import * as http from "node:http";
 import { createContext } from "../context/context.js";
-import { createRouter } from "../matcher/matcher.js";
+import type { Router } from "../matcher/type.js";
 
-export function createRoutewiseServer() {
-  const router = createRouter();
-  router.get("/health", (ctx) => ctx.json({ status: "ok" }));
-  router.get("/users/:id", (ctx) =>
-    ctx.json({
-      id: ctx.params.id,
-    }),
-  );
-
+export function createRoutewiseServer(router: Router) {
   const server = http.createServer(async (req, res) => {
     const ctx = createContext(req, res);
     const result = router.match(ctx.method, ctx.path);

@@ -16,8 +16,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "dev": "tsx watch examples/basic-api/main.ts",
-    "example:node": "tsx examples/basic-api/main.ts",
+    "dev": "npm run dev --prefix examples/basic-api",
+    "example:node": "npm run start --prefix examples/basic-api",
     "example:bun": "bun examples/basic-api/main.ts"
   },
   "files": [
