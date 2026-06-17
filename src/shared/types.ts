@@ -11,3 +11,8 @@ export interface Context {
 }
 
 export type Handler = (ctx: Context) => void | Promise<void>;
+
+export type Middleware = (
+  ctx: Context,
+  next: () => Promise<void>,
+) => void | Promise<void>;
