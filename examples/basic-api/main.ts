@@ -6,4 +6,4 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const resourcesDir = path.join(__dirname, "resources");
 
 const app = await routewise({ resourcesDir });
-app.listen(3001);
+app.listen(3000);

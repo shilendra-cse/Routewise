@@ -3,9 +3,11 @@ import { createRouter } from "../matcher/matcher.js";
 import { scan } from "./scan.js";
 import type { Router } from "../matcher/type.js";
 import { withMiddleware } from "../middleware/run.js";
-import { resolveMiddlewareChain } from "../middleware/resolve-middleware-chain.js";
 import type { Middleware } from "../shared/types.js";
 import type { ScannedMiddleware } from "./type.js";
+import { loadMiddlewareMeta } from "./middleware-meta.js";
+import { buildRouteMiddlewareChain } from "./build-route-middleware-chain.js";
+import { parseUse, readSkip } from "./route-exports.js";
 
 async function loadNamedMiddleware(
   filePath: string,
@@ -53,27 +55,14 @@ async function loadMiddlewareEntry(
   return [await loadNamedMiddleware(entry.filePath, cache)];
 }
 
-function readSkip(mod: Record<string, unknown>): string[] {
-  if (!Array.isArray(mod.skip)) return [];
-  return mod.skip.filter((name): name is string => typeof name === "string");
-}
-
-function readUse(mod: Record<string, unknown>): Middleware[] {
-  if (!Array.isArray(mod.use)) return [];
-
-  for (const entry of mod.use) {
-    if (typeof entry !== "function") {
-      throw new Error("route use entries must be middleware functions");
-    }
-  }
-
-  return mod.use;
-}
-
 export async function compile(resourcesDir: string): Promise<Router> {
   const router = createRouter();
   const { routes, middlewares } = await scan(resourcesDir);
   const middlewareCache = new Map<string, Middleware>();
+  const metaCache = new Map<
+    string,
+    Awaited<ReturnType<typeof loadMiddlewareMeta>>
+  >();
 
   for (const route of routes) {
     const mod = await import(pathToFileURL(route.filePath).href);
@@ -83,8 +72,17 @@ export async function compile(resourcesDir: string): Promise<Router> {
     }
 
     const skip = readSkip(mod);
-    const use = readUse(mod);
-    const chain = resolveMiddlewareChain(middlewares, route.segments, skip);
+    const { names: useNames, functions: useFunctions } = parseUse(
+      mod,
+      route.filePath,
+    );
+    const chain = await buildRouteMiddlewareChain(
+      middlewares,
+      route,
+      skip,
+      useNames,
+      metaCache,
+    );
     const loadedMiddlewares: Middleware[] = [];
 
     for (const entry of chain) {
@@ -93,7 +91,7 @@ export async function compile(resourcesDir: string): Promise<Router> {
       );
     }
 
-    loadedMiddlewares.push(...use);
+    loadedMiddlewares.push(...useFunctions);
 
     const handler = withMiddleware(loadedMiddlewares, mod.handler);
     router.register(route.method, route.pattern, handler);
