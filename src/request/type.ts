@@ -3,4 +3,5 @@ export type ParsedRequest = {
   path: string;
   query: Record<string, string>;
   host: string;
+  headers: Record<string, string>;
 };

@@ -3,6 +3,11 @@ import { ScannedMiddleware, ScannedRoute, ScanResult } from "./type.js";
 import { readdir } from "node:fs/promises";
 import { fileToMethod } from "./file-to-method.js";
 import { pathToPattern } from "./path-to-pattern.js";
+import {
+  isComposerFile,
+  isNamedMiddlewareFile,
+  middlewareNameFromFile,
+} from "./middleware-file.js";
 
 export async function scan(resourcesDir: string): Promise<ScanResult> {
   const absoluteRoot = path.resolve(resourcesDir);
@@ -22,8 +27,23 @@ export async function scan(resourcesDir: string): Promise<ScanResult> {
 
       if (!entry.isFile()) continue;
 
-      if (entry.name === "middleware.ts") {
-        middlewares.push({ filePath: fullPath, segments });
+      if (isComposerFile(entry.name)) {
+        middlewares.push({
+          filePath: fullPath,
+          segments,
+          name: "",
+          kind: "composer",
+        });
+        continue;
+      }
+
+      if (isNamedMiddlewareFile(entry.name)) {
+        middlewares.push({
+          filePath: fullPath,
+          segments,
+          name: middlewareNameFromFile(entry.name),
+          kind: "named",
+        });
         continue;
       }
 

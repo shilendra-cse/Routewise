@@ -8,6 +8,8 @@ export type ScannedRoute = {
 export type ScannedMiddleware = {
   filePath: string;
   segments: string[];
+  name: string;
+  kind: "named" | "composer";
 };
 
 export type ScanResult = {
