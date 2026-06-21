@@ -18,7 +18,10 @@
     "build": "tsc",
     "dev": "npm run dev --prefix examples/basic-api",
     "example:node": "npm run start --prefix examples/basic-api",
-    "example:bun": "bun examples/basic-api/main.ts"
+    "example:bun": "bun examples/basic-api/main.ts",
+    "web:dev": "npm run dev --prefix web",
+    "web:build": "npm run build --prefix web",
+    "web:start": "npm run start --prefix web"
   },
   "files": [
     "dist"

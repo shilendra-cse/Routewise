@@ -285,6 +285,9 @@ npm run build          # compile src/ → dist/
 npm run example:node   # run the example API (Node + tsx)
 npm run example:bun    # run the example API (Bun)
 npm run dev            # example in watch mode
+npm run web:dev        # product site & docs (Next.js)
 ```
 
 The example app under [`examples/basic-api`](./examples/basic-api) imports `routewise` exactly the way a published consumer would. Use it to verify behavior changes end-to-end.
+
+Documentation is also published as a Next.js site under [`web/`](./web). When you add a feature, update both this README and the matching page in `web/app/docs/`.
