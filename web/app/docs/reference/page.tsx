@@ -40,6 +40,24 @@ export default function ReferencePage() {
             <td>→ <code>ctx.params.name</code></td>
           </tr>
           <tr>
+            <td>JSON request body</td>
+            <td>automatic</td>
+            <td>—</td>
+            <td><code>ctx.body</code> when <code>Content-Type: application/json</code></td>
+          </tr>
+          <tr>
+            <td>Raw request body</td>
+            <td>automatic</td>
+            <td>—</td>
+            <td><code>ctx.rawBody</code> when body is read</td>
+          </tr>
+          <tr>
+            <td>Body size limit</td>
+            <td><code>routewise({`{ bodyLimit }`})</code></td>
+            <td><code>number</code></td>
+            <td>Default 1MB (bytes)</td>
+          </tr>
+          <tr>
             <td>Scoped middleware</td>
             <td><code>*.middleware.ts</code> location</td>
             <td>—</td>

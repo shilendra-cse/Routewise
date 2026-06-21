@@ -33,6 +33,11 @@ const app = await routewise({ resourcesDir });
 app.listen(3000);`}
       />
 
+      <DocP>
+        Optional: set a custom body size limit (default 1MB) with{" "}
+        <code>routewise({`{ resourcesDir, bodyLimit: 5_242_880 }`})</code>.
+      </DocP>
+
       <DocH2>Your first route</DocH2>
       <CodeBlock
         title="resources/health/route.get.ts"

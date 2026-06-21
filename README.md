@@ -17,8 +17,9 @@ This README is the **living developer reference**. Every feature we add gets doc
 - [Quick start](#quick-start)
 - [Project layout](#project-layout)
 - [Routing](#routing)
-- [Handlers & the context object](#handlers--the-context-object)
-- [Middleware](#middleware)
+  - [Handlers & the context object](#handlers--the-context-object)
+  - [Request body](#request-body)
+  - [Middleware](#middleware)
   - [The middleware primitive](#the-middleware-primitive)
   - [Where a file lives = where it runs](#where-a-file-lives--where-it-runs)
   - [Ordering & composers](#ordering--composers)
@@ -44,6 +45,12 @@ const resourcesDir = path.join(__dirname, "resources");
 
 const app = await routewise({ resourcesDir });
 app.listen(3000);
+```
+
+Optional body size limit (default 1MB):
+
+```ts
+const app = await routewise({ resourcesDir, bodyLimit: 5_242_880 });
 ```
 
 `routewise()` scans `resourcesDir`, compiles every route + middleware once at startup, and returns an app with a `listen(port)` method. If a route file is broken or missing its `handler` export, the process fails at startup (not on first request).
@@ -115,13 +122,59 @@ The `Context` (`ctx`) passed to every handler and middleware:
 | `ctx.params` | Dynamic route params, e.g. `{ id: "42" }` |
 | `ctx.query` | Parsed query string params |
 | `ctx.headers` | Request headers (string values) |
+| `ctx.body` | Parsed JSON body when `Content-Type: application/json` |
+| `ctx.rawBody` | Raw request body string (set whenever a body is read) |
 | `ctx.auth` | Free-form slot for auth middleware to stash a user |
 | `ctx.status(code)` | Set response status; returns `ctx` for chaining |
 | `ctx.json(data)` | Send a JSON response |
 | `ctx.notFound(msg?)` | Send 404 |
 | `ctx.unauthorized(msg?)` | Send 401 |
+| `ctx.badRequest(msg?)` | Send 400 |
 
 See [005 — Context object](./design-decisions/005-context-object.md).
+
+---
+
+## Request body
+
+Routewise reads the request body **after route matching, before middleware and the handler**. Middleware and handlers both see `ctx.body` and `ctx.rawBody`.
+
+The stream is read only when the request actually has a body (`Content-Length > 0` or `Transfer-Encoding: chunked`). GET requests without a body are not read.
+
+| Field | When set |
+| --- | --- |
+| `ctx.rawBody` | Whenever a body is read — use for webhook signature verification |
+| `ctx.body` | When `Content-Type` is `application/json` and the payload parses |
+
+```ts
+// resources/users/[id]/route.post.ts
+import type { Context } from "routewise";
+
+export function handler(ctx: Context) {
+  const body = ctx.body as { name?: string };
+  return ctx.status(201).json({ id: ctx.params.id, name: body?.name ?? null });
+}
+```
+
+**Errors:**
+
+| Condition | Response |
+| --- | --- |
+| Invalid JSON | `400` via `ctx.badRequest("Invalid JSON")` |
+| Body over limit | `413` with `{ error: "Payload too large" }` |
+
+Configure the limit via `routewise({ bodyLimit: 1_048_576 })`. Default is 1MB.
+
+Validation middleware can inspect `ctx.body` and short-circuit with `ctx.badRequest()`:
+
+```ts
+export const middleware: Middleware = async (ctx, next) => {
+  if (!ctx.body || typeof ctx.body !== "object") {
+    return ctx.badRequest("Expected JSON body");
+  }
+  await next();
+};
+```
 
 ---
 
@@ -269,6 +322,9 @@ For a request, the resolved chain is:
 | --- | --- | --- | --- |
 | Route handler | `route.<method>.ts` | `handler` fn | Required export |
 | Dynamic segment | `[name]/` folder | — | → `ctx.params.name` |
+| JSON request body | automatic | — | `ctx.body` when `Content-Type: application/json` |
+| Raw request body | automatic | — | `ctx.rawBody` when body is read |
+| Body size limit | `routewise({ bodyLimit })` | `number` | Default 1MB (bytes) |
 | Scoped middleware | `*.middleware.ts` file location | — | Applies at/below its folder |
 | Explicit order | `middleware.ts` composer | `Middleware[]` | Replaces alphabetical order in that folder |
 | Add per route | `use` in route file | `(string \| Middleware)[]` | Names (same folder) or functions |

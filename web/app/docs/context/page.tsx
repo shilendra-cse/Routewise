@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { CodeBlock } from "@/components/code-block";
 import {
   DocH2,
+  DocH3,
   DocP,
   DocPage,
   DocTable,
@@ -41,13 +42,80 @@ export function handler(ctx: Context) {
           <tr><td><code>ctx.params</code></td><td>Dynamic route params, e.g. <code>{`{ id: "42" }`}</code></td></tr>
           <tr><td><code>ctx.query</code></td><td>Parsed query string params</td></tr>
           <tr><td><code>ctx.headers</code></td><td>Request headers (string values)</td></tr>
+          <tr><td><code>ctx.body</code></td><td>Parsed JSON when <code>Content-Type: application/json</code></td></tr>
+          <tr><td><code>ctx.rawBody</code></td><td>Raw body string whenever a body is read</td></tr>
           <tr><td><code>ctx.auth</code></td><td>Free-form slot for auth middleware to stash a user</td></tr>
           <tr><td><code>ctx.status(code)</code></td><td>Set response status; returns <code>ctx</code> for chaining</td></tr>
           <tr><td><code>ctx.json(data)</code></td><td>Send a JSON response</td></tr>
           <tr><td><code>ctx.notFound(msg?)</code></td><td>Send 404</td></tr>
           <tr><td><code>ctx.unauthorized(msg?)</code></td><td>Send 401</td></tr>
+          <tr><td><code>ctx.badRequest(msg?)</code></td><td>Send 400</td></tr>
         </tbody>
       </DocTable>
+
+      <DocH2>Request body</DocH2>
+      <DocP>
+        The body is parsed after route matching and before middleware runs.
+        Both middleware and handlers can read <code>ctx.body</code> and{" "}
+        <code>ctx.rawBody</code>.
+      </DocP>
+
+      <DocTable>
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>When set</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>ctx.rawBody</code></td>
+            <td>Whenever the request has a body — use for webhook signatures</td>
+          </tr>
+          <tr>
+            <td><code>ctx.body</code></td>
+            <td>When <code>Content-Type</code> is <code>application/json</code> and parsing succeeds</td>
+          </tr>
+        </tbody>
+      </DocTable>
+
+      <CodeBlock
+        title="resources/users/[id]/route.post.ts"
+        code={`import type { Context } from "routewise";
+
+export function handler(ctx: Context) {
+  const body = ctx.body as { name?: string };
+  return ctx.status(201).json({
+    id: ctx.params.id,
+    name: body?.name ?? null,
+  });
+}`}
+      />
+
+      <DocH3>Body errors</DocH3>
+      <DocTable>
+        <thead>
+          <tr>
+            <th>Condition</th>
+            <th>Response</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Invalid JSON</td>
+            <td><code>400</code> — <code>Invalid JSON</code></td>
+          </tr>
+          <tr>
+            <td>Body over limit</td>
+            <td><code>413</code> — <code>Payload too large</code></td>
+          </tr>
+        </tbody>
+      </DocTable>
+
+      <DocP>
+        Default limit is 1MB. Override with{" "}
+        <code>routewise({`{ bodyLimit: 5_242_880 }`})</code>.
+      </DocP>
 
       <DocH2>Chaining status</DocH2>
       <CodeBlock

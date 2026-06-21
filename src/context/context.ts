@@ -34,6 +34,12 @@ export function createContext(req: IncomingMessage, res: ServerResponse) {
       res.setHeader("content-type", "application/json");
       res.end(JSON.stringify({ error: message }));
     },
+
+    badRequest(message = "bad request") {
+      res.statusCode = 400;
+      res.setHeader("content-type", "application/json");
+      res.end(JSON.stringify({ error: message }));
+    },
   };
 
   return ctx;

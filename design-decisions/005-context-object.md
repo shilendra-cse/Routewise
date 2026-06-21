@@ -94,7 +94,9 @@ function normalizeHeaders(headers) {
 
 | Field / helper | Status |
 | --- | --- |
-| `ctx.body` | Deferred — needs body parsing strategy (raw, JSON, multipart) |
+| `ctx.body` | Implemented — JSON when `Content-Type: application/json` |
+| `ctx.rawBody` | Implemented — raw string whenever body is read |
+| `ctx.badRequest(msg)` | Implemented — 400 helper |
 | `ctx.send(body)` | Deferred — text/HTML helper |
 | `ctx.setHeader(key, value)` | Deferred — direct header set on response |
 | `ctx.badRequest(msg)` | Deferred — same shape as the existing helpers |
@@ -127,7 +129,7 @@ The existing helpers cover the three most common error responses (404, 401) and 
 
 ## Deliberately deferred
 
-- Body parsing + `ctx.body`
+- Multipart / form-urlencoded body parsing
 - Streaming responses
 - Cookie helpers
 - Typed `ctx.params` and `ctx.query` (compile-time from route pattern)
