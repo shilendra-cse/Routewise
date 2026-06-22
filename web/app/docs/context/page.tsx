@@ -50,8 +50,36 @@ export function handler(ctx: Context) {
           <tr><td><code>ctx.notFound(msg?)</code></td><td>Send 404</td></tr>
           <tr><td><code>ctx.unauthorized(msg?)</code></td><td>Send 401</td></tr>
           <tr><td><code>ctx.badRequest(msg?)</code></td><td>Send 400</td></tr>
+          <tr><td><code>ctx._req</code></td><td>Node <code>IncomingMessage</code> — advanced escape hatch</td></tr>
+          <tr><td><code>ctx._res</code></td><td>Node <code>ServerResponse</code> — streaming, custom headers</td></tr>
         </tbody>
       </DocTable>
+
+      <DocH2>Advanced: <code>ctx._req</code> and <code>ctx._res</code></DocH2>
+      <DocP>
+        Underscore prefix signals advanced use. Prefer <code>ctx.json()</code> and
+        other helpers for typical APIs. Use the escape hatches for streaming,
+        custom headers, third-party Express middleware, or low-level Node APIs.
+      </DocP>
+      <DocP>
+        Routewise reads the body before middleware and handlers run. The request
+        stream on <code>ctx._req</code> may already be consumed — use{" "}
+        <code>ctx.rawBody</code> for the raw payload.
+      </DocP>
+      <CodeBlock
+        code={`// Wrap Express-style middleware
+import type { Middleware } from "routewise";
+
+export function fromExpress(expressMw: Function): Middleware {
+  return (ctx, next) =>
+    new Promise<void>((resolve, reject) => {
+      expressMw(ctx._req, ctx._res, (err?: unknown) => {
+        if (err) reject(err);
+        else resolve(next());
+      });
+    });
+}`}
+      />
 
       <DocH2>Request body</DocH2>
       <DocP>

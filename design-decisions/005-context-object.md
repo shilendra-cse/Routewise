@@ -97,6 +97,7 @@ function normalizeHeaders(headers) {
 | `ctx.body` | Implemented — JSON when `Content-Type: application/json` |
 | `ctx.rawBody` | Implemented — raw string whenever body is read |
 | `ctx.badRequest(msg)` | Implemented — 400 helper |
+| `ctx._req` / `ctx._res` | Implemented — advanced escape hatches to Node `IncomingMessage` / `ServerResponse` |
 | `ctx.send(body)` | Deferred — text/HTML helper |
 | `ctx.setHeader(key, value)` | Deferred — direct header set on response |
 | `ctx.badRequest(msg)` | Deferred — same shape as the existing helpers |
@@ -120,9 +121,9 @@ The existing helpers cover the three most common error responses (404, 401) and 
 
 | Trade-off | Why |
 | --- | --- |
-| Helpers terminate immediately | Simpler API, but no way to "queue" a response. Streaming responses will need a different escape (e.g. `ctx.res`). |
+| Helpers terminate immediately | Simpler API, but no way to "queue" a response. Streaming responses use `ctx._res`. |
 | `params`/`auth` are mutable | Middleware *needs* to mutate them. Documented contract, not a hole. |
-| No raw `req`/`res` exposed | If users need them for edge cases, we'll expose `ctx._req`/`ctx._res` later. Keep the public surface small. |
+| No raw `req`/`res` on the main API | `ctx._req` / `ctx._res` exposed as documented advanced escape hatches |
 | Headers always strings (lossy join) | Multi-value headers rarely matter; if they do, the user can read `req.headers` later. |
 
 ---

@@ -5,11 +5,13 @@ export function createContext(req: IncomingMessage, res: ServerResponse) {
   const { method, path, query, headers } = parseRequest(req);
 
   const ctx = {
+    _req: req,
+    _res: res,
     method,
     path,
     query,
     headers,
-    params: {},
+    params: {} as Record<string, string>,
     _status: 200,
 
     status(code: number) {

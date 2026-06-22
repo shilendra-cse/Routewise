@@ -1,3 +1,5 @@
+import type { IncomingMessage, ServerResponse } from "node:http";
+
 export interface Context {
   method: string;
   path: string;
@@ -7,6 +9,10 @@ export interface Context {
   body?: unknown;
   rawBody?: string;
   auth?: unknown;
+  /** Advanced escape hatch — Node incoming message. Body stream may already be consumed. */
+  _req: IncomingMessage;
+  /** Advanced escape hatch — Node server response. Prefer ctx helpers when possible. */
+  _res: ServerResponse;
   status(code: number): Context;
   json(data: unknown): void;
   notFound(message?: string): void;
@@ -20,7 +26,6 @@ export type Middleware = (
   ctx: Context,
   next: () => Promise<void>,
 ) => void | Promise<void>;
-
 
 export type RoutewiseOptions = {
   resourcesDir?: string;

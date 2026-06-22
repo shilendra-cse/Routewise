@@ -130,8 +130,36 @@ The `Context` (`ctx`) passed to every handler and middleware:
 | `ctx.notFound(msg?)` | Send 404 |
 | `ctx.unauthorized(msg?)` | Send 401 |
 | `ctx.badRequest(msg?)` | Send 400 |
+| `ctx._req` | Node `IncomingMessage` — advanced escape hatch (body stream may be consumed) |
+| `ctx._res` | Node `ServerResponse` — advanced escape hatch for streaming / custom responses |
 
 See [005 — Context object](./design-decisions/005-context-object.md).
+
+### Advanced: `ctx._req` and `ctx._res`
+
+Underscore signals **advanced use**. Prefer `ctx` helpers for normal JSON APIs. Reach for the escape hatches when you need:
+
+- **Streaming responses** — write chunks via `ctx._res`
+- **Custom response headers** — `ctx._res.setHeader(...)` before sending
+- **Third-party middleware** — adapt Express-style `(req, res, next)` middleware
+- **Low-level request data** — socket info, raw Node headers
+
+```ts
+// Adapt Express middleware
+import type { Middleware } from "routewise";
+
+export function fromExpress(expressMw: Function): Middleware {
+  return (ctx, next) =>
+    new Promise<void>((resolve, reject) => {
+      expressMw(ctx._req, ctx._res, (err?: unknown) => {
+        if (err) reject(err);
+        else resolve(next());
+      });
+    });
+}
+```
+
+> **Note:** Routewise reads the body into `ctx.body` / `ctx.rawBody` before your handler runs. The `ctx._req` stream may already be consumed — use `ctx.rawBody` for raw payload access.
 
 ---
 
@@ -325,6 +353,7 @@ For a request, the resolved chain is:
 | JSON request body | automatic | — | `ctx.body` when `Content-Type: application/json` |
 | Raw request body | automatic | — | `ctx.rawBody` when body is read |
 | Body size limit | `routewise({ bodyLimit })` | `number` | Default 1MB (bytes) |
+| Raw Node req/res | `ctx._req` / `ctx._res` | — | Advanced escape hatch |
 | Scoped middleware | `*.middleware.ts` file location | — | Applies at/below its folder |
 | Explicit order | `middleware.ts` composer | `Middleware[]` | Replaces alphabetical order in that folder |
 | Add per route | `use` in route file | `(string \| Middleware)[]` | Names (same folder) or functions |

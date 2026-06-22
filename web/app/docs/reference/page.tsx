@@ -58,6 +58,12 @@ export default function ReferencePage() {
             <td>Default 1MB (bytes)</td>
           </tr>
           <tr>
+            <td>Raw Node req/res</td>
+            <td><code>ctx._req</code> / <code>ctx._res</code></td>
+            <td>—</td>
+            <td>Advanced escape hatch</td>
+          </tr>
+          <tr>
             <td>Scoped middleware</td>
             <td><code>*.middleware.ts</code> location</td>
             <td>—</td>
