@@ -1,7 +1,7 @@
 # 001 — Middleware Model
 
-**Status:** Proposed
-**Last updated:** 2026-06-19
+**Status:** Implemented
+**Last updated:** 2026-06-20
 
 ---
 
@@ -19,7 +19,7 @@ We need a model that gives the user **full control** (like Express), keeps middl
 | --- | --- | --- | --- | --- |
 | 1 | Request logging / request ID | global | no | both |
 | 2 | CORS / security headers | global or prefix | yes (OPTIONS) | before |
-| 3 | Body parsing | global or prefix | yes (400) | before |
+| 3 | Body parsing | global or prefix | yes (400) | before | Framework parses JSON into `ctx.body` before middleware runs; validation stays in middleware |
 | 4 | Authentication | prefix or route | yes (401) | before |
 | 5 | Authorization (roles, ownership) | prefix or route | yes (403) | before |
 | 6 | Rate limiting | global / prefix / route | yes (429) | before |
@@ -32,7 +32,7 @@ We need a model that gives the user **full control** (like Express), keeps middl
 | 13 | Webhook signature verify | one route | yes (401) | before |
 | 14 | Skip public routes (e.g. `/health`) | conditional | — | before |
 | 15 | Error formatting | global | on throw | catch layer |
-| 16 | Method-specific (POST only) | route or prefix | yes | before |
+| 16 | Method-specific (POST only) | route or prefix | yes | before | `export const methods = [...]` on middleware file |
 
 All of these have to be expressible without leaving the file-based mental model.
 
@@ -149,17 +149,15 @@ If `middleware.ts` exists in a folder, it **replaces** the alphabetical chain at
 
 ```ts
 // users/[id]/route.get.ts
-import { middleware as owner } from "./owner.middleware.js";
-
-export const use = [owner];          // add for this route only
-export const skip = ["rate-limit"];   // opt out of an inherited middleware
+export const use = ["owner"];          // add by name (same folder) or pass a function
+export const skip = ["rate-limit"];    // opt out of an inherited middleware
 
 export function handler(ctx) {
   return ctx.json({ id: ctx.params.id });
 }
 ```
 
-`use` adds. `skip` removes. Both are plain arrays — no decorators.
+`use` adds. `skip` removes. Both are plain arrays — no decorators. `use` accepts middleware **names** (strings) or **functions** (inline / third-party).
 
 ### One primitive, three lifecycle phases
 
@@ -277,34 +275,41 @@ Four sentences. Full Express control. Folder-first.
 
 ---
 
-## Open questions to lock in before implementation
+## Implemented refinements (2026-06-20)
 
-1. **`skip` identifier** — is it the filename without suffix (`"auth"`), the file path, or an explicit `export const name = "auth"`? Filename is simplest; scope makes collisions unlikely but possible.
-2. **Composer semantics** — `users/middleware.ts` *replaces* the alphabetical chain at that level (chosen) vs *appends* to it. Replace is more predictable.
-3. **Composer access to siblings** — composer files import siblings via `./auth.middleware.js`. Confirm this as the documented pattern.
-4. **Composer + alphabetical fallback rule** — same rule applies at every depth: composer if present, alphabetical otherwise.
-5. **Error middleware shape** — for v1, error handling is just try/catch around `await next()` in a regular middleware. A dedicated `error.middleware.ts` convention may come later.
-6. **Method-specific middleware** — for v1, the middleware checks `ctx.method` itself. A first-class `methods: ["POST"]` declaration is deferred unless usage demands it.
+Shipped on top of Option B+ after real usage:
+
+| Refinement | What it does |
+| --- | --- |
+| `use` accepts strings | `export const use = ["specific"]` resolves `specific.middleware.ts` in the same folder |
+| `methods` on middleware file | `export const methods = ["GET", "POST"]` limits auto-inherit to those HTTP methods |
+| `inherit = false` | Middleware is opt-in only — runs when named in route `use` |
+| Deduplication | Same middleware won't run twice if both inherited and listed in `use` |
+
+Implementation lives in:
+
+- `src/compiler/scan.ts` — discovers `*.middleware.ts` and `middleware.ts` composers
+- `src/middleware/resolve-middleware-chain.ts` — folder walk, alphabetical / composer order
+- `src/compiler/build-route-middleware-chain.ts` — `methods`, `inherit`, `use` names, dedupe
+- `src/compiler/compile.ts` — loads chain, honours route `use` / `skip`
+
+---
+
+## Resolved decisions
+
+1. **`skip` identifier** — filename without suffix (`"auth"` from `auth.middleware.ts`). Chosen.
+2. **Composer semantics** — `middleware.ts` *replaces* the alphabetical chain at that level. Chosen.
+3. **Composer access to siblings** — import via `./auth.middleware.js`. Documented pattern.
+4. **Composer + alphabetical fallback** — composer if present, alphabetical otherwise, at every depth.
+5. **Error middleware shape** — try/catch around `await next()` in a regular middleware for now.
+6. **Method-specific middleware** — `export const methods = [...]` on the middleware file. Implemented.
 
 ---
 
 ## Deliberately deferred
 
-- Per-middleware `methods: [...]` config
 - Decorators / DI-style metadata
 - Programmatic `app.use(path, mw)` beyond a simple `main.ts` escape hatch
 - Schema-based validation as middleware (lives under the future `schema.ts` convention)
 - Hot reload of middleware files during dev
-
----
-
-## Implementation impact (not done yet)
-
-When we implement this, expect changes in:
-
-- `src/compiler/scan.ts` — match `*.middleware.ts`, detect optional `middleware.ts` composer per folder
-- `src/compiler/type.ts` — extend `ScannedMiddleware` with name + composer info
-- `src/middleware/resolve-middleware-chain.ts` — replace folder-prefix logic with: composer-if-present, alphabetical-otherwise, plus `skip` filtering
-- `src/compiler/compile.ts` — honour route-level `use` / `skip` exports when wrapping handlers
-- `src/shared/types.ts` — `Middleware` type already exists; no change expected
-- `examples/basic-api/resources/` — rename to `logger.middleware.ts`, `auth.middleware.ts`, optionally add composer
+- Express middleware adapters — not a supported flow; write native `*.middleware.ts` instead

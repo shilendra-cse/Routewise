@@ -13,7 +13,7 @@ Use this folder for:
 
 | # | Decision | Status |
 | --- | --- | --- |
-| 001 | [Middleware model](./001-middleware.md) | Proposed (Option B+) |
+| 001 | [Middleware model](./001-middleware.md) | Implemented |
 | 002 | [File-based routing](./002-file-based-routing.md) | Implemented |
 | 003 | [Compiler pipeline](./003-compiler-pipeline.md) | Implemented |
 | 004 | [Router & matcher](./004-router-matcher.md) | Implemented |

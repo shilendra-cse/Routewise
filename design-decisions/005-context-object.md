@@ -1,7 +1,7 @@
 # 005 — Context Object (`ctx`)
 
 **Status:** Implemented (partial)
-**Last updated:** 2026-06-19
+**Last updated:** 2026-06-20
 
 ---
 
@@ -25,12 +25,17 @@ interface Context {
   params: Record<string, string>;
   query: Record<string, string>;
   headers: Record<string, string>;
+  body?: unknown;
+  rawBody?: string;
   auth?: unknown;
+  _req: IncomingMessage;   // advanced escape hatch
+  _res: ServerResponse;    // advanced escape hatch
 
   status(code: number): Context;
   json(data: unknown): void;
   notFound(message?: string): void;
   unauthorized(message?: string): void;
+  badRequest(message?: string): void;
 }
 ```
 
@@ -97,10 +102,9 @@ function normalizeHeaders(headers) {
 | `ctx.body` | Implemented — JSON when `Content-Type: application/json` |
 | `ctx.rawBody` | Implemented — raw string whenever body is read |
 | `ctx.badRequest(msg)` | Implemented — 400 helper |
-| `ctx._req` / `ctx._res` | Implemented — advanced escape hatches to Node `IncomingMessage` / `ServerResponse` |
+| `ctx._req` / `ctx._res` | Implemented — advanced escape hatches for streaming / low-level Node APIs |
 | `ctx.send(body)` | Deferred — text/HTML helper |
 | `ctx.setHeader(key, value)` | Deferred — direct header set on response |
-| `ctx.badRequest(msg)` | Deferred — same shape as the existing helpers |
 | `ctx.forbidden(msg)` | Deferred |
 | `ctx.redirect(url)` | Deferred |
 
@@ -124,7 +128,19 @@ The existing helpers cover the three most common error responses (404, 401) and 
 | Helpers terminate immediately | Simpler API, but no way to "queue" a response. Streaming responses use `ctx._res`. |
 | `params`/`auth` are mutable | Middleware *needs* to mutate them. Documented contract, not a hole. |
 | No raw `req`/`res` on the main API | `ctx._req` / `ctx._res` exposed as documented advanced escape hatches |
-| Headers always strings (lossy join) | Multi-value headers rarely matter; if they do, the user can read `req.headers` later. |
+| Headers always strings (lossy join) | Multi-value headers rarely matter; read raw headers via `ctx._req.headers` if needed. |
+
+---
+
+## Body parsing (server-level)
+
+JSON body parsing is **not** middleware — the server reads the body after route matching and before the middleware chain:
+
+- `ctx.body` — parsed JSON when `Content-Type: application/json`
+- `ctx.rawBody` — raw string (webhooks, signature verification)
+- Invalid JSON → 400; over limit → 413
+
+Middleware and handlers both see the parsed body. See README "Request body" section.
 
 ---
 

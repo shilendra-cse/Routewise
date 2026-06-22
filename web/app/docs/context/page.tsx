@@ -59,7 +59,12 @@ export function handler(ctx: Context) {
       <DocP>
         Underscore prefix signals advanced use. Prefer <code>ctx.json()</code> and
         other helpers for typical APIs. Use the escape hatches for streaming,
-        custom headers, third-party Express middleware, or low-level Node APIs.
+        custom headers, or low-level Node APIs.
+      </DocP>
+      <DocP>
+        For cross-cutting concerns like CORS, write native{" "}
+        <code>*.middleware.ts</code> files — Routewise middleware uses{" "}
+        <code>ctx</code>, not Express adapters.
       </DocP>
       <DocP>
         Routewise reads the body before middleware and handlers run. The request
@@ -67,18 +72,14 @@ export function handler(ctx: Context) {
         <code>ctx.rawBody</code> for the raw payload.
       </DocP>
       <CodeBlock
-        code={`// Wrap Express-style middleware
-import type { Middleware } from "routewise";
+        title="resources/cors.middleware.ts"
+        code={`import type { Middleware } from "routewise";
 
-export function fromExpress(expressMw: Function): Middleware {
-  return (ctx, next) =>
-    new Promise<void>((resolve, reject) => {
-      expressMw(ctx._req, ctx._res, (err?: unknown) => {
-        if (err) reject(err);
-        else resolve(next());
-      });
-    });
-}`}
+export const middleware: Middleware = async (ctx, next) => {
+  ctx._res.setHeader("Access-Control-Allow-Origin", "*");
+  if (ctx.method === "OPTIONS") return ctx._res.end();
+  await next();
+};`}
       />
 
       <DocH2>Request body</DocH2>

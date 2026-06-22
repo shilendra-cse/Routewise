@@ -103,7 +103,7 @@ const chain = resolveMiddlewareChain(middlewares, route.segments);
 
 Current logic: a middleware applies if its segments are a prefix of the route's segments. Sort by depth (shallowest first → global runs before folder middleware).
 
-(The future Option B+ model — alphabetical default + composer override + route `use`/`skip` — replaces this resolver but leaves the rest of the pipeline intact.)
+(Current logic: walk folder levels root → route, composer-if-present / alphabetical-otherwise, filter by route `skip`, then apply `methods` / `inherit` / route `use` with deduplication. See `src/compiler/build-route-middleware-chain.ts`.)
 
 ### 4. Wrap + register
 

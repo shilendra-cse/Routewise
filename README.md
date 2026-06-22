@@ -141,22 +141,19 @@ Underscore signals **advanced use**. Prefer `ctx` helpers for normal JSON APIs. 
 
 - **Streaming responses** — write chunks via `ctx._res`
 - **Custom response headers** — `ctx._res.setHeader(...)` before sending
-- **Third-party middleware** — adapt Express-style `(req, res, next)` middleware
-- **Low-level request data** — socket info, raw Node headers
+- **Low-level request data** — socket info, raw Node headers via `ctx._req`
+
+For cross-cutting concerns (CORS, security headers), write native `*.middleware.ts` files — don't wrap Express packages:
 
 ```ts
-// Adapt Express middleware
+// resources/cors.middleware.ts
 import type { Middleware } from "routewise";
 
-export function fromExpress(expressMw: Function): Middleware {
-  return (ctx, next) =>
-    new Promise<void>((resolve, reject) => {
-      expressMw(ctx._req, ctx._res, (err?: unknown) => {
-        if (err) reject(err);
-        else resolve(next());
-      });
-    });
-}
+export const middleware: Middleware = async (ctx, next) => {
+  ctx._res.setHeader("Access-Control-Allow-Origin", "*");
+  if (ctx.method === "OPTIONS") return ctx._res.end();
+  await next();
+};
 ```
 
 > **Note:** Routewise reads the body into `ctx.body` / `ctx.rawBody` before your handler runs. The `ctx._req` stream may already be consumed — use `ctx.rawBody` for raw payload access.
