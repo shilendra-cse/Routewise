@@ -50,6 +50,7 @@ resources/
 | `route.patch.ts` | `PATCH` handler |
 | `route.delete.ts` | `DELETE` handler |
 | `[name]/` | Dynamic segment → `:name` in the matched pattern |
+| `[...name]/` | Catch-all → `*name`; must be last; captures remaining path as `"a/b/c"` |
 | Any other file | Ignored by the compiler; usable as a normal module |
 
 ### Export contract
@@ -112,13 +113,15 @@ Examples:
 | `["health"]` | `/health` |
 | `["users", "[id]"]` | `/users/:id` |
 | `["users", "[id]", "posts", "[postId]"]` | `/users/:id/posts/:postId` |
+| `["docs", "[...path]"]` | `/docs/*path` |
 
 ---
 
 ## Matching behaviour
 
-- **Static beats dynamic** — `/users/me` wins over `/users/:id` for the same method, regardless of registration order.
+- **Static > dynamic > catch-all** — more specific routes always win, regardless of registration order.
 - **405 vs 404** — path exists under other methods → `405` + `Allow`; unknown path → `404`.
+- **Catch-all** — `[...name]/` must be last; matches one or more remaining segments into `ctx.params.name` as a `/`-joined string.
 
 ---
 
@@ -126,8 +129,9 @@ Examples:
 
 | Trade-off | Why we accepted it |
 | --- | --- |
-| No catch-all routes (`[...slug]`) yet | Not needed for v1; can add later as `[...]` folder syntax |
-| No optional params | Same — defer until a real use case shows up |
+| Catch-all value is a string, not an array | Keeps `ctx.params` as `Record<string, string>`; split on `/` if you need parts |
+| Catch-all requires ≥1 segment | Optional catch-all (`[[...name]]`) deferred until needed |
+| No optional params | Query params usually cover it |
 | One folder = one path (can't split same path across folders) | Forces clear resource boundaries; matches the "folders are your API" pitch |
 | No mixed-case method files (`route.GET.ts`) | Lowercase is the convention; saves users from inconsistent naming |
 
@@ -135,8 +139,8 @@ Examples:
 
 ## Deliberately deferred
 
-- Catch-all segments (`[...slug]`)
-- Optional segments
+- Optional catch-all (`[[...name]]` — zero or more segments)
+- Optional single segments
 - Route groups (`(group)/` folder syntax)
 - File-level method overrides (e.g. one file handling GET + POST)
 - JS file support

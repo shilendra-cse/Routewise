@@ -21,3 +21,18 @@ test("multiple dynamic segments are converted", () => {
     "/users/:id/posts/:postId",
   );
 });
+
+test("catch-all [...param] becomes *param", () => {
+  assert.equal(pathToPattern(["docs", "[...path]"]), "/docs/*path");
+});
+
+test("root catch-all is supported", () => {
+  assert.equal(pathToPattern(["[...slug]"]), "/*slug");
+});
+
+test("throws when catch-all is not the last segment", () => {
+  assert.throws(
+    () => pathToPattern(["docs", "[...path]", "extra"]),
+    /must be the last folder/,
+  );
+});

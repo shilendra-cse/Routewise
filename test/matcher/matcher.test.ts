@@ -64,3 +64,21 @@ test("allowedMethods is empty when path does not exist", () => {
 
   assert.deepEqual(router.allowedMethods("/missing"), []);
 });
+
+test("matches catch-all routes and prefers more specific ones", () => {
+  const router = createRouter();
+  const catchAll = (_ctx: Context) => {};
+  const guide = (_ctx: Context) => {};
+
+  router.get("/docs/*path", catchAll);
+  router.get("/docs/guide", guide);
+
+  const specific = router.match("GET", "/docs/guide");
+  assert.ok(specific);
+  assert.equal(specific.handler, guide);
+
+  const deep = router.match("GET", "/docs/a/b/c");
+  assert.ok(deep);
+  assert.equal(deep.handler, catchAll);
+  assert.deepEqual(deep.params, { path: "a/b/c" });
+});

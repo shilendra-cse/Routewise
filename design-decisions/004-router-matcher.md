@@ -149,15 +149,16 @@ When the matcher becomes a trie, we'll likely move to one tree per method.
 
 | Behavior | Rule |
 | --- | --- |
-| Static vs dynamic | Most specific route wins — static segments score higher than `:param` |
+| Static vs dynamic vs catch-all | Specificity: static (10) > dynamic (1) > catch-all (0) |
 | Wrong method | `router.allowedMethods(path)` → if non-empty and method miss → `405` |
+| Catch-all | Pattern `*name`; must be last segment; params value is `/`-joined remainder |
 
 ---
 
 ## Deliberately deferred
 
 - Trie / radix tree matcher
-- Catch-all segments (`/files/[...path]`)
+- Optional catch-all (`[[...name]]`)
 - Optional segments
 - Auto HEAD from GET, auto OPTIONS for CORS
 - Route conflict detection at compile time

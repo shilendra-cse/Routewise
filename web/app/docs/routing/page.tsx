@@ -49,6 +49,23 @@ export function handler(ctx: Context) {
 }`}
       />
 
+      <DocH2>Catch-all segments</DocH2>
+      <DocP>
+        Use <code>[...name]/</code> as the <strong>last</strong> folder to
+        capture the rest of the path. The value is a single string joined with{" "}
+        <code>/</code> — for <code>/docs/a/b/c</code>,{" "}
+        <code>ctx.params.path</code> is <code>&quot;a/b/c&quot;</code>. At least
+        one remaining segment is required.
+      </DocP>
+      <CodeBlock
+        title="resources/docs/[...path]/route.get.ts"
+        code={`import type { Context } from "routewise";
+
+export function handler(ctx: Context) {
+  return ctx.json({ path: ctx.params.path });
+}`}
+      />
+
       <DocH2>Folder → URL mapping</DocH2>
       <DocTable>
         <thead>
@@ -61,7 +78,7 @@ export function handler(ctx: Context) {
           <tr><td><code>[]</code> (root)</td><td><code>/</code></td></tr>
           <tr><td><code>["health"]</code></td><td><code>/health</code></td></tr>
           <tr><td><code>["users", "[id]"]</code></td><td><code>/users/:id</code></td></tr>
-          <tr><td><code>["users", "[id]", "posts", "[postId]"]</code></td><td><code>/users/:id/posts/:postId</code></td></tr>
+          <tr><td><code>["docs", "[...path]"]</code></td><td><code>/docs/*path</code></td></tr>
         </tbody>
       </DocTable>
 
@@ -74,11 +91,8 @@ export function handler(ctx: Context) {
 
       <DocH2>Matching rules</DocH2>
       <DocP>
-        <strong>Static beats dynamic.</strong> If both{" "}
-        <code>users/me/route.get.ts</code> and{" "}
-        <code>users/[id]/route.get.ts</code> exist,{" "}
-        <code>GET /users/me</code> always hits the static route — registration
-        order does not matter.
+        <strong>Static &gt; dynamic &gt; catch-all.</strong> More specific
+        routes always win, regardless of registration order.
       </DocP>
       <DocP>
         <strong>405 Method Not Allowed.</strong> When the path exists under

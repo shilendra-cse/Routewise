@@ -89,6 +89,7 @@ Only `route.*.ts`, `*.middleware.ts`, and `middleware.ts` are special. **Any oth
 | `route.patch.ts` | `PATCH` handler |
 | `route.delete.ts` | `DELETE` handler |
 | `[name]/` folder | Dynamic segment → `:name`, available as `ctx.params.name` |
+| `[...name]/` folder | Catch-all → remaining path as `ctx.params.name` (joined with `/`) |
 
 Folder segments map to URL patterns:
 
@@ -98,13 +99,15 @@ Folder segments map to URL patterns:
 | `["health"]` | `/health` |
 | `["users", "[id]"]` | `/users/:id` |
 | `["users", "[id]", "posts", "[postId]"]` | `/users/:id/posts/:postId` |
+| `["docs", "[...path]"]` | `/docs/*path` |
 
 Every `route.*.ts` must export a `handler` function. See [002 — File-based routing](./design-decisions/002-file-based-routing.md).
 
 ### Matching rules
 
-- **Static beats dynamic** — `/users/me` wins over `/users/:id` for `GET /users/me`, regardless of registration order.
+- **Static beats dynamic beats catch-all** — `/users/me` wins over `/users/:id`; `/docs/guide` wins over `/docs/*path`.
 - **405 Method Not Allowed** — if the path exists under other methods but not the requested one, Routewise returns `405` with an `Allow` header (and JSON `{ error, allow }`). Unknown paths still return `404`.
+- **Catch-all** — `[...path]/` must be the last folder. It matches one or more remaining segments; `ctx.params.path` is `"a/b/c"` for `/docs/a/b/c`.
 
 ---
 
@@ -353,7 +356,8 @@ For a request, the resolved chain is:
 | --- | --- | --- | --- |
 | Route handler | `route.<method>.ts` | `handler` fn | Required export |
 | Dynamic segment | `[name]/` folder | — | → `ctx.params.name` |
-| Static vs dynamic | automatic | — | Static segments beat dynamic ones |
+| Catch-all | `[...name]/` folder | — | → `ctx.params.name` as `"a/b/c"` |
+| Static vs dynamic | automatic | — | Static > dynamic > catch-all |
 | Wrong method | automatic | — | `405` + `Allow` when path exists |
 | JSON request body | automatic | — | `ctx.body` when `Content-Type: application/json` |
 | Raw request body | automatic | — | `ctx.rawBody` when body is read |

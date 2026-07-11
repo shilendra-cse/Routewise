@@ -40,10 +40,16 @@ export default function ReferencePage() {
             <td>→ <code>ctx.params.name</code></td>
           </tr>
           <tr>
+            <td>Catch-all</td>
+            <td><code>[...name]/</code> folder</td>
+            <td>—</td>
+            <td>→ <code>ctx.params.name</code> as <code>&quot;a/b/c&quot;</code></td>
+          </tr>
+          <tr>
             <td>Static vs dynamic</td>
             <td>automatic</td>
             <td>—</td>
-            <td>Static segments beat dynamic ones</td>
+            <td>Static &gt; dynamic &gt; catch-all</td>
           </tr>
           <tr>
             <td>Wrong method</td>
