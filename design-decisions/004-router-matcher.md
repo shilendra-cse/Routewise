@@ -122,10 +122,7 @@ When we benchmark and the linear matcher costs more than ~5% of request time, sw
 
 Routes are tried in registration order. The compiler currently registers in `readdir` order. This is **stable enough for v1**, but two consequences:
 
-- A literal segment and a dynamic one in the same slot at the same depth (`/users/me` vs `/users/:id`) match in registration order. Today's order is filesystem-driven.
-- For the future trie, we'll need an explicit "static beats dynamic" tie-break rule.
-
-For v1 we sidestep this by not encouraging conflicting routes.
+- A literal segment and a dynamic one in the same slot at the same depth (`/users/me` vs `/users/:id`) — **static wins** via specificity scoring, independent of registration order.
 
 ---
 
@@ -143,8 +140,17 @@ When the matcher becomes a trie, we'll likely move to one tree per method.
 | --- | --- |
 | Linear scan | Simple, easy to verify, fast enough for v1 |
 | No conflict detection at register time | The compiler controls registration; users can't directly produce ambiguous routes |
-| No 405 (Method Not Allowed) — returns 404 | Matches the "no route" behaviour; specifically distinguishing 404 vs 405 requires per-path method indexing, deferred |
+| No 405 (Method Not Allowed) — returns 404 | **Superseded** — path exists under other methods → `405` + `Allow` |
 | No HEAD/OPTIONS auto-handling | Out of scope for v1 |
+
+---
+
+## Matching refinements (2026-07-11)
+
+| Behavior | Rule |
+| --- | --- |
+| Static vs dynamic | Most specific route wins — static segments score higher than `:param` |
+| Wrong method | `router.allowedMethods(path)` → if non-empty and method miss → `405` |
 
 ---
 
@@ -153,6 +159,5 @@ When the matcher becomes a trie, we'll likely move to one tree per method.
 - Trie / radix tree matcher
 - Catch-all segments (`/files/[...path]`)
 - Optional segments
-- 405 Method Not Allowed responses
 - Auto HEAD from GET, auto OPTIONS for CORS
 - Route conflict detection at compile time

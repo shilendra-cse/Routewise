@@ -50,6 +50,7 @@ export function handler(ctx: Context) {
           <tr><td><code>ctx.notFound(msg?)</code></td><td>Send 404</td></tr>
           <tr><td><code>ctx.unauthorized(msg?)</code></td><td>Send 401</td></tr>
           <tr><td><code>ctx.badRequest(msg?)</code></td><td>Send 400</td></tr>
+          <tr><td><code>ctx.methodNotAllowed(allowed)</code></td><td>Send 405 with <code>Allow</code> header</td></tr>
           <tr><td><code>ctx._req</code></td><td>Node <code>IncomingMessage</code> — advanced escape hatch</td></tr>
           <tr><td><code>ctx._res</code></td><td>Node <code>ServerResponse</code> — streaming, custom headers</td></tr>
         </tbody>

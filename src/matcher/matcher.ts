@@ -1,8 +1,9 @@
 import { Handler } from "../shared/types.js";
-import { MatchResult, Route } from "./type.js";
 import { matchSegments } from "./utils/matchSegments.js";
+import { routeSpecificity } from "./utils/routeSpecificity.js";
+import type { MatchResult, Route, Router } from "./type.js";
 
-export function createRouter() {
+export function createRouter(): Router {
   const routes: Route[] = [];
 
   function register(method: string, pattern: string, handler: Handler) {
@@ -16,18 +17,41 @@ export function createRouter() {
 
   function match(method: string, path: string): MatchResult | null {
     const pathSegments = path.split("/").filter(Boolean);
+    let best: { route: Route; params: Record<string, string> } | null = null;
 
     for (const route of routes) {
       if (route.method !== method) continue;
+
       const params = matchSegments(route.segments, pathSegments);
-      if (params !== null)
-        return {
-          handler: route.handler,
-          params,
-        };
+      if (params === null) continue;
+
+      if (
+        !best ||
+        routeSpecificity(route.segments) > routeSpecificity(best.route.segments)
+      ) {
+        best = { route, params };
+      }
     }
 
-    return null;
+    if (!best) return null;
+
+    return {
+      handler: best.route.handler,
+      params: best.params,
+    };
+  }
+
+  function allowedMethods(path: string): string[] {
+    const pathSegments = path.split("/").filter(Boolean);
+    const methods = new Set<string>();
+
+    for (const route of routes) {
+      if (matchSegments(route.segments, pathSegments) !== null) {
+        methods.add(route.method);
+      }
+    }
+
+    return [...methods].sort();
   }
 
   return {
@@ -42,6 +66,7 @@ export function createRouter() {
     delete: (pattern: string, handler: Handler) =>
       register("DELETE", pattern, handler),
     match,
+    allowedMethods,
     register,
   };
 }

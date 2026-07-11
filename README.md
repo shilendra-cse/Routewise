@@ -101,6 +101,11 @@ Folder segments map to URL patterns:
 
 Every `route.*.ts` must export a `handler` function. See [002 — File-based routing](./design-decisions/002-file-based-routing.md).
 
+### Matching rules
+
+- **Static beats dynamic** — `/users/me` wins over `/users/:id` for `GET /users/me`, regardless of registration order.
+- **405 Method Not Allowed** — if the path exists under other methods but not the requested one, Routewise returns `405` with an `Allow` header (and JSON `{ error, allow }`). Unknown paths still return `404`.
+
 ---
 
 ## Handlers & the context object
@@ -130,6 +135,7 @@ The `Context` (`ctx`) passed to every handler and middleware:
 | `ctx.notFound(msg?)` | Send 404 |
 | `ctx.unauthorized(msg?)` | Send 401 |
 | `ctx.badRequest(msg?)` | Send 400 |
+| `ctx.methodNotAllowed(allowed)` | Send 405 with `Allow` header |
 | `ctx._req` | Node `IncomingMessage` — advanced escape hatch (body stream may be consumed) |
 | `ctx._res` | Node `ServerResponse` — advanced escape hatch for streaming / custom responses |
 
@@ -347,6 +353,8 @@ For a request, the resolved chain is:
 | --- | --- | --- | --- |
 | Route handler | `route.<method>.ts` | `handler` fn | Required export |
 | Dynamic segment | `[name]/` folder | — | → `ctx.params.name` |
+| Static vs dynamic | automatic | — | Static segments beat dynamic ones |
+| Wrong method | automatic | — | `405` + `Allow` when path exists |
 | JSON request body | automatic | — | `ctx.body` when `Content-Type: application/json` |
 | Raw request body | automatic | — | `ctx.rawBody` when body is read |
 | Body size limit | `routewise({ bodyLimit })` | `number` | Default 1MB (bytes) |

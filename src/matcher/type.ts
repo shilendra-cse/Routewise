@@ -20,4 +20,5 @@ export type Router = {
   delete(pattern: string, handler: Handler): void;
   register(method: string, pattern: string, handler: Handler): void;
   match(method: string, path: string): MatchResult | null;
+  allowedMethods(path: string): string[];
 };

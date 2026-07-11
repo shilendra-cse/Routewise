@@ -71,6 +71,21 @@ export function handler(ctx: Context) {
         <code>handler</code>. Missing exports fail at startup with the file
         path in the error message.
       </DocP>
+
+      <DocH2>Matching rules</DocH2>
+      <DocP>
+        <strong>Static beats dynamic.</strong> If both{" "}
+        <code>users/me/route.get.ts</code> and{" "}
+        <code>users/[id]/route.get.ts</code> exist,{" "}
+        <code>GET /users/me</code> always hits the static route — registration
+        order does not matter.
+      </DocP>
+      <DocP>
+        <strong>405 Method Not Allowed.</strong> When the path exists under
+        other HTTP methods but not the one requested, Routewise returns{" "}
+        <code>405</code> with an <code>Allow</code> header listing the valid
+        methods. Unknown paths still return <code>404</code>.
+      </DocP>
     </DocPage>
   );
 }

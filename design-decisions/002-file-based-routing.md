@@ -115,6 +115,13 @@ Examples:
 
 ---
 
+## Matching behaviour
+
+- **Static beats dynamic** — `/users/me` wins over `/users/:id` for the same method, regardless of registration order.
+- **405 vs 404** — path exists under other methods → `405` + `Allow`; unknown path → `404`.
+
+---
+
 ## Trade-offs accepted
 
 | Trade-off | Why we accepted it |

@@ -40,6 +40,18 @@ export default function ReferencePage() {
             <td>→ <code>ctx.params.name</code></td>
           </tr>
           <tr>
+            <td>Static vs dynamic</td>
+            <td>automatic</td>
+            <td>—</td>
+            <td>Static segments beat dynamic ones</td>
+          </tr>
+          <tr>
+            <td>Wrong method</td>
+            <td>automatic</td>
+            <td>—</td>
+            <td><code>405</code> + <code>Allow</code> when path exists</td>
+          </tr>
+          <tr>
             <td>JSON request body</td>
             <td>automatic</td>
             <td>—</td>

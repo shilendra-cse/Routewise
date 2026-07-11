@@ -37,14 +37,30 @@ test("extracts params from dynamic routes", () => {
   assert.deepEqual(result.params, { id: "42" });
 });
 
-test("first registered match wins", () => {
+test("static route beats dynamic even when dynamic is registered first", () => {
   const router = createRouter();
-  const first = (_ctx: Context) => {};
-  const second = (_ctx: Context) => {};
-  router.get("/users/me", first);
-  router.get("/users/:id", second);
+  const dynamic = (_ctx: Context) => {};
+  const staticRoute = (_ctx: Context) => {};
+
+  router.get("/users/:id", dynamic);
+  router.get("/users/me", staticRoute);
 
   const result = router.match("GET", "/users/me");
   assert.ok(result);
-  assert.equal(result.handler, first);
+  assert.equal(result.handler, staticRoute);
+});
+
+test("allowedMethods returns verbs for an existing path", () => {
+  const router = createRouter();
+  router.get("/users/:id", noop);
+  router.patch("/users/:id", noop);
+
+  assert.deepEqual(router.allowedMethods("/users/42"), ["GET", "PATCH"]);
+});
+
+test("allowedMethods is empty when path does not exist", () => {
+  const router = createRouter();
+  router.get("/health", noop);
+
+  assert.deepEqual(router.allowedMethods("/missing"), []);
 });

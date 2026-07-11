@@ -18,6 +18,7 @@ export interface Context {
   notFound(message?: string): void;
   unauthorized(message?: string): void;
   badRequest(message?: string): void;
+  methodNotAllowed(allowed: string[]): void;
 }
 
 export type Handler = (ctx: Context) => void | Promise<void>;

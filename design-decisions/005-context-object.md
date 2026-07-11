@@ -102,6 +102,7 @@ function normalizeHeaders(headers) {
 | `ctx.body` | Implemented — JSON when `Content-Type: application/json` |
 | `ctx.rawBody` | Implemented — raw string whenever body is read |
 | `ctx.badRequest(msg)` | Implemented — 400 helper |
+| `ctx.methodNotAllowed(allowed)` | Implemented — 405 + `Allow` header |
 | `ctx._req` / `ctx._res` | Implemented — advanced escape hatches for streaming / low-level Node APIs |
 | `ctx.send(body)` | Deferred — text/HTML helper |
 | `ctx.setHeader(key, value)` | Deferred — direct header set on response |

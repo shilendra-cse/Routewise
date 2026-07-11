@@ -13,7 +13,11 @@ export function createRoutewiseServer(
     const ctx = createContext(req, res);
     const result = router.match(ctx.method, ctx.path);
 
-    if (!result) return ctx.notFound();
+    if (!result) {
+      const allowed = router.allowedMethods(ctx.path);
+      if (allowed.length > 0) return ctx.methodNotAllowed(allowed);
+      return ctx.notFound();
+    }
 
     ctx.params = result.params;
 

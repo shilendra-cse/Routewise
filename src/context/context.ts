@@ -42,6 +42,18 @@ export function createContext(req: IncomingMessage, res: ServerResponse) {
       res.setHeader("content-type", "application/json");
       res.end(JSON.stringify({ error: message }));
     },
+
+    methodNotAllowed(allowed: string[]) {
+      res.statusCode = 405;
+      res.setHeader("content-type", "application/json");
+      res.setHeader("allow", allowed.join(", "));
+      res.end(
+        JSON.stringify({
+          error: "Method Not Allowed",
+          allow: allowed,
+        }),
+      );
+    },
   };
 
   return ctx;
